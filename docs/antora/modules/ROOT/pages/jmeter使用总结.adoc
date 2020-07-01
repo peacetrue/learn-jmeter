@@ -1,0 +1,165 @@
+= jmeter 使用总结
+
+参考 https://jmeter.apache.org/[jmeter 官网]，笔者使用的是 5.3 版本。
+
+== 基本操作
+
+jmeter 界面打开后，会初始化一个名为 Test Plan 的测试计划：
+
+image::初始测试计划.png[]
+
+测试计划下面可以添加多个线程组：
+
+image::添加线程组.png[]
+
+线程组下可以添加多个 HTTP 请求：
+
+image::添加http请求.png[]
+
+HTTP 请求下可以添加查看结果树监听器：
+
+image::查看结果树.png[]
+
+至此，我们就有了一个测试计划最基础的元件，接下来配置请求的具体信息：
+
+.请求百度首页
+image::请求百度首页.png[]
+
+简单做个测试，请求百度首页。执行请求后，查看响应结果：
+
+image::查看响应结果.png[]
+
+至此，我们就完成了一个最简单的请求。
+
+为了方便学习，可以检出资源库，里面有一些具体的测试计划文件（后缀为 jmx），可以直接导入后运行：
+
+.测试计划-步骤1
+image::打开测试计划-1.png[]
+
+.测试计划-步骤2
+image::选择测试计划-2.png[]
+
+== 定位 jmeter.properties
+
+jmeter.properties 是 jmeter 的配置文件，接下来有些操作会涉及到修改配置信息，所以提前找好 jmeter.properties 的位置：
+
+[source%nowrap]
+----
+$ find /usr/local -name jmeter.properties
+
+/usr/local/Cellar/jmeter/5.3/libexec/bin/jmeter.properties
+----
+
+== 响应乱码
+
+默认情况下，返回数据的编码格式为 ISO-8859-1，这会导致返回数据出现乱码：
+
+image::响应乱码.png[]
+
+需要将编码格式改为 UTF-8。打开 jmeter.properties 配置文件，找到配置项 sampleresult.default.encoding，修改其值为 UTF-8：
+
+image::jmeter响应编码.png[]
+
+改完之后，重新打开 jmeter 界面，再次执行请求，可以看到返回数据正常了：
+
+image::jmeter响应正常.png[]
+
+== 登陆后执行操作
+
+创建一个线程组，添加一个 Cookie 管理器，添加一个登陆请求，然后再添加其他依赖登陆的请求：
+
+image::线程组内登陆.png[]
+
+最后运行该线程组，这样登陆请求成功后，其他请求也都是经过身份认证的：
+
+.登陆成功
+image::登陆成功.png[]
+
+.登陆后请求成功
+image::登陆后请求成功.png[]
+
+在一个线程组内，请求是顺序执行的，Cookie 管理器会在请求之间传递 cookie，类似于在浏览器中运行。
+
+如果有多个线程组，每个线程组都添加一个登陆请求，会很繁琐，有没有更好的办法呢？
+
+== 登陆后手动设置会话 Cookie
+
+创建一个测试计划（或者导入资源库中已经提供的测试计划）：
+
+image::测试计划-登陆后手动设置.png[]
+
+单独运行登陆线程组：
+
+image::单独运行登陆线程组.png[]
+
+查看返回的 Cookie 信息：
+
+image::查看登陆后的Cookie.png[]
+
+手动添加到 Cookie 管理器中：
+
+image::添加Cookie值.png[]
+
+这样单独运行【依赖登陆的线程组1】和【依赖登陆的线程组2】都能通过认证。
+
+手动设置会话 Cookie 也有些麻烦，有没有方法可以自动设置会话 Cookie 呢？
+
+== 登陆后自动设置会话 Cookie
+
+首先，启用 cookie 缓存为变量，打开 jmeter.properties 文件，找到 #CookieManager.save.cookies=false， 取消该行注释，修改值为 true：
+
+image::jmeter-cookie.png[]
+
+这样可以通过变量（COOKIE_{名称}）取得 cookie 值。
+
+基于 登陆后手动设置会话 Cookie 进行修改，在登陆请求下添加后置处理器：
+
+image::添加登陆后置处理器.png[]
+
+然后，编写后置处理器的脚本内容：
+
+image::登陆后置处理器脚本.png[]
+
+[source%nowrap]
+----
+String session = vars.get("COOKIE_SESSION"); //<1>
+props.put("session",session); //<2>
+----
+<1> 从变量集合中取出会话 cookie 值
+<2> 将会话 cookie 值存储到属性集合中
+
+为什么要将 cookie 值，从变量集合转存到属性集合呢，因为变量只能在线程内使用，跨线程变量无法共享，但属性可以持久化，也能跨线程共享。
+
+最后，在 Cookie 管理器中添加会话 Cookie：
+
+image::设置会话Cookie值.png[]
+会话 Cookie 名为 SESSION，会话 Cookie 值为 ${__property(session)}，即获取 session 属性的值，之前我们已经在后置处理器中设置过 session 属性值了。
+
+至此就完成了所有配置，接下来查看运行效果。首先，单独运行【登陆线程组】；然后禁用【登陆线程组】，最后运行所有线程组。
+
+== 负载测试
+
+当启动 jmeter 时，jmeter 会在客户端提示：
+
+[source%nowrap]
+----
+$ jmeter
+================================================================================
+Don't use GUI mode for load testing !, only for Test creation and Test debugging.
+For load testing, use CLI Mode (was NON GUI):
+   jmeter -n -t [jmx file] -l [results file] -e -o [Path to web report folder]
+& increase Java Heap to meet your test requirements:
+   Modify current env variable HEAP="-Xms1g -Xmx1g -XX:MaxMetaspaceSize=256m" in the jmeter batch file
+Check : https://jmeter.apache.org/usermanual/best-practices.html
+================================================================================
+----
+
+不要使用界面模式做负载测试，界面模式只用于测试创建和调试测试。负载测试需要使用命令行模式。
+
+做负载测试时，我们可以通过界面模式调整参数，但不要通过界面模式直接运行，要使用命令行模式。参考之前【登陆后自动设置会话 Cookie】所描述的，运用于命令行模式会有问题。通过界面模式登陆后，再使用命令行模式执行其他请求，此时会提示尚未登陆。
+
+这里我们需要使用【登陆后手动设置会话 Cookie】，通过界面模式登陆后，取得会话 Cookie，然后存储在 Cookie 管理器中：
+
+image::设置Cookie默认值.png[]
+
+直接基于 `${\__property(session)}`，添加一个默认值 `${__property(session,,e0efbaaa-dbba-41b2-b260-76723650381c)}`，这样界面模式和命令行模式都可以使用。
