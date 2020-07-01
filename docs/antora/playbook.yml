@@ -2,7 +2,7 @@
 # antora generate --clean playbook.yml
 # antora generate playbook.yml
 site:
-  title: jmeter 使用总结
+  title: 学习 jmeter
   url: https://peacetrue.github.io
   start_page: learn-jmeter::jmeter使用总结.adoc
 content:
