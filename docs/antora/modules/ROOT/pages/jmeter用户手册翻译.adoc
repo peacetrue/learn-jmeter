@@ -55,7 +55,7 @@ Cookie Manager元素具有两个功能：
 
 JMeter会检查收到的Cookie是否对该URL有效。这意味着不会存储跨域Cookie。如果您有错误的行为或希望使用跨域cookie，请定义JMeter属性“ CookieManager.check.cookies = false”。
 
-收到的Cookies可以存储为JMeter线程变量。要将cookie保存为变量，请定义属性“ CookieManager.save.cookies = true”。另外，在存储cookie名称之前，它们以“ COOKIE_”为前缀（这避免了局部变量的意外损坏）。若要恢复原始行为，请定义属性“ CookieManager.name.prefix =”（一个或多个空格）。如果启用，则名为TEST的cookie的值可以称为$ {COOKIE_TEST}。
+收到的Cookies可以存储为JMeter线程变量。要将cookie保存为变量，请定义属性“ CookieManager.save.cookies = true”。另外，在存储cookie名称之前，它们以“ COOKIE_”为前缀（这避免了局部变量的意外损坏）。若要恢复原始行为，请定义属性“ CookieManager.name.prefix =”（一个或多个空格）。如果启用，则名为TEST的cookie的值可以称为$\{COOKIE_TEST}。
 
 其次，您可以将Cookie手动添加到Cookie Manager。但是，如果执行此操作，则cookie将被所有JMeter线程共享。
 

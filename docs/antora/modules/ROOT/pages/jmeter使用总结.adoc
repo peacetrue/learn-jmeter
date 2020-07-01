@@ -1,6 +1,6 @@
 = jmeter 使用总结
 
-参考 https://jmeter.apache.org/[jmeter 官网]，笔者使用的是 5.3 版本。
+参考 https://jmeter.apache.org/[jmeter 官网^]，笔者使用的是 5.3 版本。
 
 == 基本操作
 
@@ -110,7 +110,7 @@ image::添加Cookie值.png[]
 
 image::jmeter-cookie.png[]
 
-这样可以通过变量（COOKIE_{名称}）取得 cookie 值。
+这样可以通过变量（COOKIE_\{名称}）取得 cookie 值。
 
 基于 登陆后手动设置会话 Cookie 进行修改，在登陆请求下添加后置处理器：
 
