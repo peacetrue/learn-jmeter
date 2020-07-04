@@ -31,7 +31,7 @@ image::查看响应结果.png[]
 
 至此，我们就完成了一个最简单的请求。
 
-为了方便学习，可以检出资源库，里面有一些具体的测试计划文件（后缀为 jmx），可以直接导入后运行：
+为了方便学习，可以检出 https://github.com/peacetrue/learn-jmeter[学习 jmeter^] 资源库，里面有一些具体的测试计划文件（后缀为 jmx），可以直接导入后运行：
 
 .测试计划-步骤1
 image::打开测试计划-1.png[]
@@ -163,3 +163,8 @@ Check : https://jmeter.apache.org/usermanual/best-practices.html
 image::设置Cookie默认值.png[]
 
 直接基于 `${\__property(session)}`，添加一个默认值 `${__property(session,,e0efbaaa-dbba-41b2-b260-76723650381c)}`，这样界面模式和命令行模式都可以使用。
+
+
+
+
+本文源码位于 https://github.com/peacetrue/learn-jmeter[学习 jmeter^]
